@@ -1,0 +1,14 @@
+name: crab
+version: 0.1.0
+homepage: https://github.com/saccho/crab
+description: Provides a Rust-like Result type.
+
+environment:
+  sdk: '>=2.14.0 <3.0.0'
+
+dependencies:
+  meta: ^1.7.0
+
+dev_dependencies:
+  pedantic_mono: any
+  test: ^1.20.2
