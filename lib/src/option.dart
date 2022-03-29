@@ -27,7 +27,7 @@ abstract class Option<T> {
   /// or call [unwrapOr] or [unwrapOrElse].
   T unwrap() => isSome
       ? _someValue
-      : throw UnwrapError<void>('called `Option#unwrap` on an `None` value');
+      : throw UnwrapError('called `Option#unwrap` on an `None` value');
 
   /// Returns the contained [Some] value or a provided default.
   ///

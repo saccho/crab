@@ -35,7 +35,7 @@ void main() {
 
     test('should throw error when `None` value', () {
       const Option<String> opt = None();
-      expect(opt.unwrap, throwsA(const TypeMatcher<UnwrapError<void>>()));
+      expect(opt.unwrap, throwsA(const TypeMatcher<UnwrapError>()));
     });
   });
 

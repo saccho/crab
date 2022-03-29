@@ -35,14 +35,14 @@ void main() {
 
     test('should throw error when `Err` value', () {
       const Result<String, String> res = Err('err');
-      expect(res.unwrap, throwsA(const TypeMatcher<UnwrapError<String>>()));
+      expect(res.unwrap, throwsA(const TypeMatcher<UnwrapError>()));
     });
   });
 
   group('unwrapErr', () {
     test('should throw error when `Ok` value', () {
       const Result<String, String> res = Ok('ok');
-      expect(res.unwrapErr, throwsA(const TypeMatcher<UnwrapError<String>>()));
+      expect(res.unwrapErr, throwsA(const TypeMatcher<UnwrapError>()));
     });
 
     test('should return value when `Err` value', () {
