@@ -2,9 +2,19 @@ name: Test
 on:
   pull_request:
     types: [opened, synchronize]
+    paths:
+      - '**.dart'
+      - 'analysis_options.yaml'
+      - 'pubspec.yaml'
+      - '.github/workflows/**'
   push:
     branches:
       - main
+    paths:
+      - '**.dart'
+      - 'analysis_options.yaml'
+      - 'pubspec.yaml'
+      - '.github/workflows/**'
 jobs:
   lint:
     runs-on: ubuntu-latest
