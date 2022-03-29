@@ -1,3 +1,3 @@
 # crab
 
-Provides a Rust-like Result type.
+Provides a Rust-like types.

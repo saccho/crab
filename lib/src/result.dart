@@ -1,21 +1,14 @@
 import 'package:meta/meta.dart';
 
-/// Error thrown by the runtime system when [Result.unwrap] or
-/// [Result.unwrapErr] fails.
-class UnwrapError<T> extends Error {
-  UnwrapError(this.message, this.obj);
-
-  final String message;
-  final T obj;
-
-  @override
-  String toString() => '$message: $obj';
-}
+import 'util/convert.dart';
+import 'util/errors.dart';
 
 /// `Result` is a type that represents either success ([Ok]) or failure
-///  ([Err]).
+/// ([Err]).
 @sealed
 abstract class Result<T, E> {
+  const Result();
+
   Ok<T, E> get _asOk => this as Ok<T, E>;
 
   Err<T, E> get _asErr => this as Err<T, E>;
@@ -32,14 +25,15 @@ abstract class Result<T, E> {
 
   /// Returns the contained [Ok] value, consuming the `this` value.
   ///
-  /// Because this function may throw error, its use is generally discouraged.
+  /// Because this function may throw an error, its use is generally
+  /// discouraged.
   /// Instead, prefer to handle the [Err] case explicitly,
   /// or call [unwrapOr] or [unwrapOrElse].
   T unwrap() => isOk
       ? _okValue
       : throw UnwrapError(
           'called `Result#unwrap` on an `Err` value',
-          _errValue,
+          obj: _errValue,
         );
 
   /// Returns the contained [Err] value, consuming the `this` value.
@@ -49,7 +43,7 @@ abstract class Result<T, E> {
   E unwrapErr() => isOk
       ? throw UnwrapError(
           'called `Result#unwrapErr` on an `Ok` value',
-          _okValue,
+          obj: _okValue,
         )
       : _errValue;
 
@@ -84,16 +78,16 @@ abstract class Result<T, E> {
   /// Arguments passed to `mapOr` are eagerly evaluated; if you are passing
   /// the result of a function call, it is recommended to use [mapOrElse],
   /// which is lazily evaluated.
-  U mapOr<U>(U defaultValue, U Function(T value) op) =>
-      isOk ? op(_okValue) : defaultValue;
+  U mapOr<U>(U defaultValue, U Function(T value) f) =>
+      isOk ? f(_okValue) : defaultValue;
 
-  /// Maps a `Result<T, E>` to `U` by applying fallback function `default` to
+  /// Maps a `Result<T, E>` to `U` by applying fallback function `defaultF` to
   /// a contained [Err] value, or function `f` to a contained [Ok] value.
   ///
   /// This function can be used to unpack a successful result
   /// while handling an error.
-  U mapOrElse<U>(U Function(E err) defaultOp, U Function(T value) op) =>
-      isOk ? op(_okValue) : defaultOp(_errValue);
+  U mapOrElse<U>(U Function(E err) defaultF, U Function(T value) f) =>
+      isOk ? f(_okValue) : defaultF(_errValue);
 
   /// Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a
   /// contained [Ok] value, leaving an [Err] value untouched.
@@ -101,16 +95,16 @@ abstract class Result<T, E> {
       isOk ? op(_okValue) : Err(_errValue);
 }
 
-extension Flatten<T, E> on Result<Result<T, E>, E> {
+extension ResultFlattener<T, E> on Result<Result<T, E>, E> {
   /// Converts from `Result<Result<T, E>, E>` to `Result<T, E>`
-  Result<T, E> flatten() => flatMap(_identity);
+  Result<T, E> flatten() => flatMap(identity);
 }
 
 /// `Ok` is a type that represents success and contains a `T` type success
 /// value.
 @sealed
 class Ok<T, E> extends Result<T, E> {
-  Ok(this.value);
+  const Ok(this.value);
 
   final T value;
 
@@ -130,7 +124,7 @@ class Ok<T, E> extends Result<T, E> {
 /// `Err` is a type that represents failure and contains a `E` type error value.
 @sealed
 class Err<T, E> extends Result<T, E> {
-  Err(this.err);
+  const Err(this.err);
 
   final E err;
 
@@ -146,5 +140,3 @@ class Err<T, E> extends Result<T, E> {
   @override
   int get hashCode => err.hashCode;
 }
-
-T _identity<T>(T x) => x;
