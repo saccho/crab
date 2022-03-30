@@ -11,7 +11,7 @@ abstract class Option<T> {
 
   Some<T> get _asSome => this as Some<T>;
 
-  T get _someValue => _asSome.value;
+  T get _someValue => _asSome._value;
 
   /// Returns `true` if the option is [Some].
   bool get isSome => this is Some;
@@ -73,9 +73,9 @@ extension OptionFlattener<T> on Option<Option<T>> {
 /// value.
 @sealed
 class Some<T> extends Option<T> {
-  const Some(this.value);
+  const Some(this._value);
 
-  final T value;
+  final T _value;
 
   @override
   bool operator ==(Object other) {
@@ -83,11 +83,14 @@ class Some<T> extends Option<T> {
       return true;
     }
 
-    return other is Some<T> && other.value == value;
+    return other is Some<T> && other._value == _value;
   }
 
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => _value.hashCode;
+
+  @override
+  String toString() => 'Some(${_value.toString()})';
 }
 
 /// `None` is a type that represents not having a value.
@@ -106,4 +109,7 @@ class None<T> extends Option<T> {
 
   @override
   int get hashCode => toString().hashCode;
+
+  @override
+  String toString() => 'None';
 }

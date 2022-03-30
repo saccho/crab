@@ -80,11 +80,6 @@ abstract class Result<T, E> {
   U mapOrElse<U>(U Function(E err) defaultF, U Function(T value) f) =>
       isOk ? f(_okValue) : defaultF(_errValue);
 
-  /// Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a
-  /// contained [Ok] value, leaving an [Err] value untouched.
-  Result<U, E> flatMap<U>(Result<U, E> Function(T value) op) =>
-      isOk ? op(_okValue) : Err(_errValue);
-
   /// Returns an iterator over the possibly contained value.
   ///
   /// The iterator yields one value if the result is [Ok], otherwise none.
@@ -167,7 +162,7 @@ abstract class Result<T, E> {
 
 extension ResultFlattener<T, E> on Result<Result<T, E>, E> {
   /// Converts from `Result<Result<T, E>, E>` to `Result<T, E>`
-  Result<T, E> flatten() => flatMap(identity);
+  Result<T, E> flatten() => andThen(identity);
 }
 
 extension ResultTransposer<T, E> on Result<T?, E> {
@@ -228,6 +223,9 @@ class Ok<T, E> extends Result<T, E> {
 
   @override
   int get hashCode => _value.hashCode;
+
+  @override
+  String toString() => 'Ok(${_value.toString()})';
 }
 
 /// `Err` is a type that represents failure and contains a `E` type error value.
@@ -248,4 +246,7 @@ class Err<T, E> extends Result<T, E> {
 
   @override
   int get hashCode => _value.hashCode;
+
+  @override
+  String toString() => 'Err(${_value.toString()})';
 }
