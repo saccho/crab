@@ -1,6 +1,6 @@
 import 'package:meta/meta.dart';
 
-import 'util/convert.dart';
+import 'option.dart';
 import 'util/errors.dart';
 
 /// `Result` is a type that represents either success ([Ok]) or failure
@@ -13,9 +13,9 @@ abstract class Result<T, E> {
 
   Err<T, E> get _asErr => this as Err<T, E>;
 
-  T get _okValue => _asOk.value;
+  T get _okValue => _asOk._value;
 
-  E get _errValue => _asErr.err;
+  E get _errValue => _asErr._value;
 
   /// Returns `true` if the result is [Ok].
   bool get isOk => this is Ok;
@@ -23,39 +23,29 @@ abstract class Result<T, E> {
   /// Returns `true` if the result is [Err].
   bool get isErr => !isOk;
 
-  /// Returns the contained [Ok] value, consuming the `this` value.
+  /// Converts from `Result<T, E>` to `T?`.
   ///
-  /// Because this function may throw an error, its use is generally
-  /// discouraged.
-  /// Instead, prefer to handle the [Err] case explicitly,
-  /// or call [unwrapOr] or [unwrapOrElse].
-  T unwrap() => isOk
-      ? _okValue
-      : throw UnwrapError(
-          'called `Result#unwrap` on an `Err` value',
-          obj: _errValue,
-        );
+  /// Converts `this` into a nullable value, consuming `this`,
+  /// and discarding the error, if any.
+  T? ok() => isOk ? _okValue : null;
 
-  /// Returns the contained [Err] value, consuming the `this` value.
+  /// Converts from `Result<T, E>` to `Option<T>`.
   ///
-  /// Exceptions if the value is an [Ok], with a custom error message provided
-  /// by the [Ok]'s value.
-  E unwrapErr() => isOk
-      ? throw UnwrapError(
-          'called `Result#unwrapErr` on an `Ok` value',
-          obj: _okValue,
-        )
-      : _errValue;
+  /// Converts `this` into an [Option], consuming `this`,
+  /// and discarding the error, if any.
+  Option<T> okOpt() => isOk ? Some(_okValue) : None<T>();
 
-  /// Returns the contained [Ok] value or a provided default.
+  /// Converts from `Result<T, E>` to `T?`.
   ///
-  /// Arguments passed to `unwrapOr` are eagerly evaluated; if you are passing
-  /// the result of a function call, it is recommended to use
-  /// [unwrapOrElse], which is lazily evaluated.
-  T unwrapOr(T defaultValue) => isOk ? _okValue : defaultValue;
+  /// Converts `this` into a nullable value, consuming `this`,
+  /// and discarding the success value, if any.
+  E? err() => isOk ? null : _errValue;
 
-  /// Returns the contained [Ok] value or computes it from a closure.
-  T unwrapOrElse(T Function(E err) op) => isOk ? _okValue : op(_errValue);
+  /// Converts from `Result<T, E>` to `Option<E>`.
+  ///
+  /// Converts `this` into an [Option], consuming `this`,
+  /// and discarding the success value, if any.
+  Option<E> errOpt() => isOk ? None<E>() : Some(_errValue);
 
   /// Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a
   /// contained [Ok] value, leaving an [Err] value untouched.
@@ -93,20 +83,133 @@ abstract class Result<T, E> {
   /// contained [Ok] value, leaving an [Err] value untouched.
   Result<U, E> flatMap<U>(Result<U, E> Function(T value) op) =>
       isOk ? op(_okValue) : Err(_errValue);
+
+  /// Returns an iterator over the possibly contained value.
+  ///
+  /// The iterator yields one value if the result is [Ok], otherwise none.
+  Iterable<T> iter() => isOk ? [_okValue] : const [];
+
+  /// Returns the contained [Ok] value, consuming the `this` value.
+  ///
+  /// Throw an error if the value is an [Err], with an error message including
+  /// the passed message, and the content of the [Err].
+  T expect(String msg) =>
+      isOk ? _okValue : throw UnwrapError(msg, obj: _errValue);
+
+  /// Returns the contained [Ok] value, consuming the `this` value.
+  ///
+  /// Because this function may throw an error, its use is generally
+  /// discouraged.
+  /// Instead, prefer to handle the [Err] case explicitly,
+  /// or call [unwrapOr] or [unwrapOrElse].
+  T unwrap() => isOk
+      ? _okValue
+      : throw UnwrapError(
+          'called `Result#unwrap` on an `Err` value',
+          obj: _errValue,
+        );
+
+  /// Returns the contained [Err] value, consuming the `this` value.
+  ///
+  /// Throw an error if the value is an [Ok], with an error message including
+  /// the passed message, and the content of the [Ok].
+  E expectErr(String msg) =>
+      isOk ? throw UnwrapError(msg, obj: _okValue) : _errValue;
+
+  /// Returns the contained [Err] value, consuming the `this` value.
+  ///
+  /// Exceptions if the value is an [Ok], with a custom error message provided
+  /// by the [Ok]'s value.
+  E unwrapErr() => isOk
+      ? throw UnwrapError(
+          'called `Result#unwrapErr` on an `Ok` value',
+          obj: _okValue,
+        )
+      : _errValue;
+
+  /// Returns `res` if the result is [Ok], otherwise returns the [Err] value of
+  /// `this`.
+  Result<U, E> and<U>(Result<U, E> res) => isOk ? res : Err(_errValue);
+
+  /// Calls `op` if the result is [Ok], otherwise returns the [Err] value of
+  /// `this`.
+  ///
+  /// This function can be used for control flow based on `Result` values.
+  Result<U, E> andThen<U>(Result<U, E> Function(T value) op) =>
+      isOk ? op(_okValue) : Err(_errValue);
+
+  /// Returns `res` if the result is [Err], otherwise returns the [Ok] value of
+  /// `this`.
+  ///
+  /// Arguments passed to `or` are eagerly evaluated; if you are passing the
+  /// result of a function call, it is recommended to use [orElse], which is
+  /// lazily evaluated.
+  Result<T, F> or<F>(Result<T, F> res) => isOk ? Ok(_okValue) : res;
+
+  /// Calls `op` if the result is [Err], otherwise returns the [Ok] value of
+  /// `this`.
+  ///
+  /// This function can be used for control flow based on result values.
+  Result<T, F> orElse<F>(Result<T, F> Function(E err) op) =>
+      isOk ? Ok(_okValue) : op(_errValue);
+
+  /// Returns the contained [Ok] value or a provided default.
+  ///
+  /// Arguments passed to `unwrapOr` are eagerly evaluated; if you are passing
+  /// the result of a function call, it is recommended to use
+  /// [unwrapOrElse], which is lazily evaluated.
+  T unwrapOr(T defaultValue) => isOk ? _okValue : defaultValue;
+
+  /// Returns the contained [Ok] value or computes it from a closure.
+  T unwrapOrElse(T Function(E err) op) => isOk ? _okValue : op(_errValue);
 }
 
-extension ResultFlattener<T, E> on Result<Result<T, E>, E> {
-  /// Converts from `Result<Result<T, E>, E>` to `Result<T, E>`
-  Result<T, E> flatten() => flatMap(identity);
+extension ResultTransposer<T, E> on Result<T?, E> {
+  /// Transposes a `Result` with a nullable value into a nullable `Result`.
+  ///
+  /// `Ok(null)` will be mapped to `null`.
+  /// `Ok(_)` and `Err(_)` will be mapped to `Ok(_)` and
+  /// `Err(_)`.
+  Result<T, E>? transpose() {
+    if (isOk) {
+      final x = _okValue;
+      if (x != null) {
+        return Ok(x);
+      } else {
+        return null;
+      }
+    } else {
+      return Err(_errValue);
+    }
+  }
+}
+
+extension ResultOptionTransposer<T, E> on Result<Option<T>, E> {
+  /// Transposes a `Result` of an `Option` into an `Option` of a `Result`.
+  ///
+  /// `Ok(None)` will be mapped to `None`.
+  /// `Ok(Some(_))` and `Err(_)` will be mapped to `Some(Ok(_))` and
+  /// `Some(Err(_))`.
+  Option<Result<T, E>> transposeOpt() {
+    if (isOk) {
+      if (_okValue.isSome) {
+        return Some(Ok(_okValue.unwrap()));
+      } else {
+        return const None();
+      }
+    } else {
+      return Some(Err(_errValue));
+    }
+  }
 }
 
 /// `Ok` is a type that represents success and contains a `T` type success
 /// value.
 @sealed
 class Ok<T, E> extends Result<T, E> {
-  const Ok(this.value);
+  const Ok(this._value);
 
-  final T value;
+  final T _value;
 
   @override
   bool operator ==(Object other) {
@@ -114,19 +217,19 @@ class Ok<T, E> extends Result<T, E> {
       return true;
     }
 
-    return other is Ok<T, E> && other.value == value;
+    return other is Ok<T, E> && other._value == _value;
   }
 
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => _value.hashCode;
 }
 
 /// `Err` is a type that represents failure and contains a `E` type error value.
 @sealed
 class Err<T, E> extends Result<T, E> {
-  const Err(this.err);
+  const Err(this._value);
 
-  final E err;
+  final E _value;
 
   @override
   bool operator ==(Object other) {
@@ -134,9 +237,9 @@ class Err<T, E> extends Result<T, E> {
       return true;
     }
 
-    return other is Err<T, E> && other.err == err;
+    return other is Err<T, E> && other._value == _value;
   }
 
   @override
-  int get hashCode => err.hashCode;
+  int get hashCode => _value.hashCode;
 }
