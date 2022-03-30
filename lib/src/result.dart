@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 
 import 'option.dart';
+import 'util/convert.dart';
 import 'util/errors.dart';
 
 /// `Result` is a type that represents either success ([Ok]) or failure
@@ -162,6 +163,11 @@ abstract class Result<T, E> {
 
   /// Returns the contained [Ok] value or computes it from a closure.
   T unwrapOrElse(T Function(E err) op) => isOk ? _okValue : op(_errValue);
+}
+
+extension ResultFlattener<T, E> on Result<Result<T, E>, E> {
+  /// Converts from `Result<Result<T, E>, E>` to `Result<T, E>`
+  Result<T, E> flatten() => flatMap(identity);
 }
 
 extension ResultTransposer<T, E> on Result<T?, E> {
