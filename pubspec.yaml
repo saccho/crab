@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   meta: ^1.7.0
+  tuple: ^2.0.0
 
 dev_dependencies:
   pedantic_mono: any
