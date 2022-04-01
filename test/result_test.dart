@@ -125,7 +125,7 @@ void main() {
   group('iter', () {
     test('should return `Iterable` with value when `Ok`', () {
       const Result<String, String> res = Ok('ok');
-      expect(res.iter(), ['ok']);
+      expect(res.iter(), const ['ok']);
     });
 
     test('should return empty `Iterable` when `Err`', () {
@@ -209,13 +209,13 @@ void main() {
       expect(res.and(res2), const Err<String, String>('err'));
     });
 
-    test('should return self `Err` when `Err` (passed `Ok`)', () {
+    test('should return `Err` with self value when `Err` (passed `Ok`)', () {
       const Result<int, String> res = Err('err');
       const Result<String, String> res2 = Ok('ok');
       expect(res.and(res2), const Err<String, String>('err'));
     });
 
-    test('should return self `Err` when `Err` (passed `Err`)', () {
+    test('should return `Err` with self value when `Err` (passed `Err`)', () {
       const Result<int, String> res = Err('err');
       const Result<String, String> res2 = Err('err2');
       expect(res.and(res2), const Err<String, String>('err'));
@@ -241,13 +241,13 @@ void main() {
   });
 
   group('or', () {
-    test('should return self `Ok` when `Ok (passed `Ok`)`', () {
+    test('should return `Ok` with self value when `Ok (passed `Ok`)`', () {
       const Result<int, String> res = Ok(2);
       const Result<int, String> res2 = Ok(100);
       expect(res.or(res2), const Ok<int, String>(2));
     });
 
-    test('should return self `Err` when `Ok` (passed `Err`)', () {
+    test('should return `Ok` with self value when `Ok` (passed `Err`)', () {
       const Result<int, String> res = Ok(2);
       const Result<int, String> res2 = Err('err');
       expect(res.or(res2), const Ok<int, String>(2));
@@ -269,18 +269,12 @@ void main() {
   group('orElse', () {
     test('should not apply a function when `Ok`', () {
       const Result<String, String> res = Ok('ok');
-      expect(
-        res.orElse((err) => Err(err.length)),
-        const Ok<String, int>('ok'),
-      );
+      expect(res.orElse((err) => Err(err.length)), const Ok<String, int>('ok'));
     });
 
     test('should apply a function when `Err`', () {
       const Result<String, String> res = Err('err');
-      expect(
-        res.orElse((err) => Err(err.length)),
-        const Err<String, int>(3),
-      );
+      expect(res.orElse((err) => Err(err.length)), const Err<String, int>(3));
     });
   });
 
@@ -309,17 +303,17 @@ void main() {
   });
 
   group('flatten', () {
-    test('should return Ok<T, E> when received Ok<Ok<T, E>, E>', () {
+    test('should return Ok<T, E> when Ok<Ok<T, E>, E>', () {
       const Result<Result<String, String>, String> res = Ok(Ok('ok-ok'));
       expect(res.flatten(), const Ok<String, String>('ok-ok'));
     });
 
-    test('should return Err<T, E> when received Ok<Err<T, E>, E>', () {
+    test('should return Err<T, E> when Ok<Err<T, E>, E>', () {
       const Result<Result<String, String>, String> res = Ok(Err('ok-err'));
       expect(res.flatten(), const Err<String, String>('ok-err'));
     });
 
-    test('should return Err<T, E> when received Err<Result<T, E>, E>', () {
+    test('should return Err<T, E> when Err<Result<T, E>, E>', () {
       const Result<Result<String, String>, String> res = Err('err');
       expect(res.flatten(), const Err<String, String>('err'));
     });
@@ -343,19 +337,19 @@ void main() {
   });
 
   group('transposeOpt', () {
-    test('should return None when `Ok(None)`', () {
+    test('should return `None` when `Ok(None)`', () {
       const Result<Option<String>, String> res = Ok(None());
       const Option<Result<String, String>> expected = None();
       expect(res.transposeOpt(), expected);
     });
 
-    test('should return `Some(Ok(_))` when `Ok(Some(_))`', () {
+    test('should return `Some(Ok(v))` when `Ok(Some(v))`', () {
       const Result<Option<String>, String> res = Ok(Some('ok-some'));
       const Option<Result<String, String>> expected = Some(Ok('ok-some'));
       expect(res.transposeOpt(), expected);
     });
 
-    test('should return `Some(Err(_))` when `Err(_)`', () {
+    test('should return `Some(Err(v))` when `Err(v)`', () {
       const Result<Option<String>, String> res = Err('err');
       const Option<Result<String, String>> expected = Some(Err('err'));
       expect(res.transposeOpt(), expected);
