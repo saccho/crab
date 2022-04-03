@@ -1,8 +1,8 @@
 import 'package:meta/meta.dart';
 
+import 'errors.dart';
 import 'option.dart';
 import 'util/convert.dart';
-import 'util/errors.dart';
 
 /// `Result` is a type that represents either success ([Ok]) or failure
 /// ([Err]).
@@ -36,7 +36,7 @@ abstract class Result<T, E> {
   /// and discarding the error, if any.
   Option<T> okOpt() => isOk ? Some(_okValue) : None<T>();
 
-  /// Converts from `Result<T, E>` to `T?`.
+  /// Converts from `Result<T, E>` to `E?`.
   ///
   /// Converts `this` into a nullable value, consuming `this`,
   /// and discarding the success value, if any.
@@ -80,9 +80,9 @@ abstract class Result<T, E> {
   U mapOrElse<U>(U Function(E err) defaultF, U Function(T value) f) =>
       isOk ? f(_okValue) : defaultF(_errValue);
 
-  /// Returns an iterator over the possibly contained value.
+  /// Returns an iterable over the possibly contained value.
   ///
-  /// The iterator yields one value if the result is [Ok], otherwise none.
+  /// The iterable yields one value if the result is [Ok], otherwise none.
   Iterable<T> iter() => isOk ? [_okValue] : const [];
 
   /// Returns the contained [Ok] value, consuming the `this` value.
@@ -169,18 +169,13 @@ extension ResultTransposer<T, E> on Result<T?, E> {
   /// Transposes a `Result` with a nullable value into a nullable `Result`.
   ///
   /// `Ok(null)` will be mapped to `null`.
-  /// `Ok(_)` and `Err(_)` will be mapped to `Ok(_)` and
-  /// `Err(_)`.
+  /// `Ok(v)` and `Err(e)` (if `v` and `e` are not null) will be returned as is.
   Result<T, E>? transpose() {
     if (isOk) {
-      final x = _okValue;
-      if (x != null) {
-        return Ok(x);
-      } else {
-        return null;
-      }
+      final x = unwrap();
+      return x != null ? Ok(x) : null;
     } else {
-      return Err(_errValue);
+      return Err(unwrapErr());
     }
   }
 }
@@ -193,13 +188,9 @@ extension ResultOptionTransposer<T, E> on Result<Option<T>, E> {
   /// `Some(Err(_))`.
   Option<Result<T, E>> transposeOpt() {
     if (isOk) {
-      if (_okValue.isSome) {
-        return Some(Ok(_okValue.unwrap()));
-      } else {
-        return const None();
-      }
+      return unwrap().map((value) => Ok(value));
     } else {
-      return Some(Err(_errValue));
+      return Some(Err(unwrapErr()));
     }
   }
 }

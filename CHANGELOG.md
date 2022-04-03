@@ -1,3 +1,10 @@
+## 1.0.0
+
+Crab is now stable!
+
+- Added `Option` methods. You can use almost all the features of Rust's `Option` trait (exclude nightly-only features).
+- **Breaking**: `Option#flatMep` is removed. You can use `Option#andThen` instead.
+
 ## 0.2.0
 
 - Added `Result` methods. You can use almost all the features of Rust's `Result` trait (exclude nightly-only features).

@@ -1,0 +1,13 @@
+name: crab_example
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=2.14.0 <3.0.0'
+
+dependencies:
+  crab: 
+    path: ..
+
+dev_dependencies:
+  pedantic_mono: any
