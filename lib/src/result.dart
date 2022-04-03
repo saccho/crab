@@ -1,8 +1,8 @@
 import 'package:meta/meta.dart';
 
+import 'errors.dart';
 import 'option.dart';
 import 'util/convert.dart';
-import 'errors.dart';
 
 /// `Result` is a type that represents either success ([Ok]) or failure
 /// ([Err]).
