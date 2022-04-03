@@ -1,5 +1,5 @@
 name: crab
-version: 0.3.0
+version: 1.0.0
 homepage: https://github.com/saccho/crab
 description: Provides Rust-like Result and Option types, making it easier to handle error and option values.
 
